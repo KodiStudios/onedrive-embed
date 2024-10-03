@@ -1,12 +1,62 @@
 import { Client } from "@microsoft/microsoft-graph-client";
-import fs from "fs";
+import fs, { Dirent } from "node:fs";
 import minimist from "minimist";
-import path from "path";
+import path from "node:path";
 
-function findFileSharedItemIds(
-  filePath: string
-): Array</*sharedItemId*/ string> {
-  const sharedItemIds = new Array<string>();
+function addOneDriveFilePath(
+  filePath: string,
+  sharedIdOdFileHash: Map</*sharedId*/ string, /*oneDrivePath*/ string>
+) {
+  const fileContent: string = fs.readFileSync(filePath, `utf8`);
+  // <img src="https://1drv.ms/i/s!AmslmcZf6z3Lg98-IHg6iib_9ykDOw?embed=1&width=981&height=740" width="981" height="740" />
+
+  //         ttps: / /1drv.ms /i /s!Ase"
+  let reg = /".*\:\/\/1drv.ms\/i\/[^"]+"/g;
+
+  let contentChanged = false;
+  const updatedFileContent = fileContent.replace(
+    reg,
+    /*replacer*/ (quotedUrl: string, ...args: any[]): string => {
+      console.log(`Matched quotedUrl: ${quotedUrl}`);
+      let resultString = quotedUrl;
+      if (quotedUrl.match(/\#/)) {
+        // Already has one, Noop
+        console.log(`Already Has #`);
+      } else {
+        let matches: RegExpMatchArray | null = quotedUrl.match(
+          /\:\/\/1drv.ms\/i\/([^\?]+)/
+        );
+        if (matches) {
+          // Get Shared Id
+          const sharedId3: string = matches[1];
+          console.log(`Matched SharedId: ${sharedId3}`);
+          const oneDriveFilePath: string | undefined =
+            sharedIdOdFileHash.get(sharedId3);
+          if (oneDriveFilePath) {
+            resultString = quotedUrl.replace(/"$/, `#${oneDriveFilePath}"`);
+            console.log(`Updated: ${resultString}`);
+            contentChanged = true;
+          }
+        } else {
+          console.log(`Can't find SharedId`);
+        }
+      }
+
+      return resultString;
+    }
+  );
+
+  if (contentChanged) {
+    console.log(`Writing File: ${filePath}`);
+    fs.writeFileSync(filePath, updatedFileContent, {
+      encoding: "utf8",
+      flag: "w",
+    });
+  }
+}
+
+function findFileSharedItemIds(filePath: string): Set</*sharedItemId*/ string> {
+  const sharedItemIds = new Set<string>();
 
   const fileContent: string = fs.readFileSync(filePath, `utf8`);
 
@@ -16,28 +66,7 @@ function findFileSharedItemIds(
   // s!AmslmcZf6z3Lg98-IHg6iib_9ykDOw
   //                                         : / /1drv.ms /i /SharedId
   for (const match of fileContent.matchAll(/\:\/\/1drv.ms\/i\/([^\?]+)/g)) {
-    sharedItemIds.push(match[1]);
-  }
-
-  return sharedItemIds;
-}
-
-function findDirectorySharedItemIds(
-  directoryPath: string
-): Array</*sharedItemId*/ string> {
-  const sharedItemIds = new Array<string>();
-
-  const filesOrDirectoryNames = fs.readdirSync(directoryPath);
-
-  for (const fileOrDirectoryName of filesOrDirectoryNames) {
-    const fileOrDirectoryPath = path.join(directoryPath, fileOrDirectoryName);
-    if (fs.statSync(fileOrDirectoryPath).isDirectory()) {
-      // Directory
-      sharedItemIds.push(...findDirectorySharedItemIds(fileOrDirectoryPath));
-    } else {
-      // File
-      sharedItemIds.push(...findFileSharedItemIds(fileOrDirectoryPath));
-    }
+    sharedItemIds.add(match[1]);
   }
 
   return sharedItemIds;
@@ -67,10 +96,33 @@ async function getOneDriveFilePath(
   const directoryPath: string = matchGroups![1];
 
   // driveItem.name is file name
-  const filePath: string = path.join(directoryPath, driveItem.name);
-  console.log(`filePath: ${filePath}`);
+  const oneDriveFilePath: string = path.posix.join(
+    directoryPath,
+    driveItem.name
+  );
+  console.log(`filePath: ${oneDriveFilePath}`);
 
-  return filePath;
+  return oneDriveFilePath;
+}
+
+function getAllFilePaths(directoryPath: string): Array<string> {
+  let filePaths = new Array<string>();
+  const fileOrDirectories: Dirent[] = fs.readdirSync(directoryPath, {
+    withFileTypes: true,
+  });
+
+  for (const fileOrDirectory of fileOrDirectories) {
+    const fileOrDirectoryPath = path.join(directoryPath, fileOrDirectory.name);
+    if (fileOrDirectory.isDirectory()) {
+      // Directory
+      filePaths.push(...getAllFilePaths(fileOrDirectoryPath));
+    } else {
+      // File
+      filePaths.push(fileOrDirectoryPath);
+    }
+  }
+
+  return filePaths;
 }
 
 async function main(): Promise<void> {
@@ -85,9 +137,14 @@ async function main(): Promise<void> {
     return;
   }
 
-  const sharedItemIds: Array<string> = findDirectorySharedItemIds(
-    argv.directory
-  );
+  const filePaths: Array<string> = getAllFilePaths(argv.directory);
+
+  const sharedItemIds = new Set<string>();
+  for (const filePath of filePaths) {
+    findFileSharedItemIds(filePath).forEach((value) =>
+      sharedItemIds.add(value)
+    );
+  }
 
   const graphClient: Client = Client.init({
     defaultVersion: "v1.0",
@@ -98,6 +155,11 @@ async function main(): Promise<void> {
     },
   });
 
+  let oneDriveFilePathMap = new Map<
+    /*sharedItemId*/ string,
+    /*filePath*/ string
+  >();
+
   for (const sharedItemId of sharedItemIds) {
     console.log(`sharedItemId: ${sharedItemId}`);
     const oneDriveFilePath = await getOneDriveFilePath(
@@ -106,6 +168,12 @@ async function main(): Promise<void> {
     );
     console.log(`sharedItemId: ${sharedItemId}`);
     console.log(`oneDriveFilePath: ${oneDriveFilePath}`);
+
+    oneDriveFilePathMap.set(sharedItemId, oneDriveFilePath);
+  }
+
+  for (const filePath of filePaths) {
+    addOneDriveFilePath(filePath, oneDriveFilePathMap);
   }
 }
 
