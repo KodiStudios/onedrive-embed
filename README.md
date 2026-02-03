@@ -16,4 +16,7 @@ Copy token value to clipboard, this will be your {token-value} in next step.
 ## Execute
 
 Execute:
-node --experimental-strip-types index.ts --directory {your-directory} --token {token-value}
+
+```Cmd
+node index.ts --directory {your-directory} --token {token-value}
+```
