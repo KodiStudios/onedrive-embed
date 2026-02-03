@@ -4,7 +4,7 @@ import minimist from "minimist";
 import * as path from "node:path";
 
 // Embed OneDrive file path into OneDrive image URLs in the given file
-function addOneDriveFilePath(
+export function addOneDriveFilePath(
   filePath: string,
   sharedIdOdFileHash: Map</*sharedId*/ string, /*oneDrivePath*/ string>,
 ) {
@@ -56,7 +56,7 @@ function addOneDriveFilePath(
   }
 }
 
-function findFileSharedItemIds(filePath: string): Set</*sharedItemId*/ string> {
+export function findFileSharedItemIds(filePath: string): Set</*sharedItemId*/ string> {
   const sharedItemIds = new Set<string>();
 
   const fileContent: string = fs.readFileSync(filePath, `utf8`);
@@ -73,7 +73,7 @@ function findFileSharedItemIds(filePath: string): Set</*sharedItemId*/ string> {
   return sharedItemIds;
 }
 
-async function getOneDriveFilePath(
+export async function getOneDriveFilePath(
   sharedItemId: string,
   graphClient: Client,
 ): Promise<string> {
@@ -106,7 +106,7 @@ async function getOneDriveFilePath(
   return oneDriveFilePath;
 }
 
-function getAllFilePaths(directoryPath: string): Array<string> {
+export function getAllFilePaths(directoryPath: string): Array<string> {
   let filePaths = new Array<string>();
   const fileOrDirectories: Dirent[] = fs.readdirSync(directoryPath, {
     withFileTypes: true,
@@ -178,4 +178,7 @@ async function main(): Promise<void> {
   }
 }
 
-await main();
+// Only run main if this is the entry point
+if (import.meta.filename === process.argv[1]) {
+  await main();
+}
