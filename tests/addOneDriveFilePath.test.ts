@@ -90,7 +90,7 @@ describe("addOneDriveFilePath", () => {
     const actualContent = fs.readFileSync(tempFile, "utf8");
     const expectedContent = fs.readFileSync(
       path.join(expectedDir, "sample.md"),
-      "utf8"
+      "utf8",
     );
 
     assert.strictEqual(actualContent, expectedContent);
@@ -110,7 +110,7 @@ describe("addOneDriveFilePath", () => {
     const actualContent = fs.readFileSync(tempFile, "utf8");
     const expectedContent = fs.readFileSync(
       path.join(expectedDir, "sample.html"),
-      "utf8"
+      "utf8",
     );
 
     assert.strictEqual(actualContent, expectedContent);
@@ -167,7 +167,7 @@ describe("addOneDriveFilePath", () => {
     const actualContent = fs.readFileSync(tempFile, "utf8");
     const expectedContent = fs.readFileSync(
       path.join(expectedDir, "nested", "deep.md"),
-      "utf8"
+      "utf8",
     );
 
     assert.strictEqual(actualContent, expectedContent);

@@ -31,7 +31,7 @@ describe("getOneDriveFilePath", () => {
 
     const result = await getOneDriveFilePath(
       "s!TestSharedId",
-      mockGraphClient as any
+      mockGraphClient as any,
     );
 
     assert.strictEqual(result, "/Pictures/vacation/photo.png");
@@ -60,7 +60,7 @@ describe("getOneDriveFilePath", () => {
 
     const result = await getOneDriveFilePath(
       "s!NestedSharedId",
-      mockGraphClient as any
+      mockGraphClient as any,
     );
 
     assert.strictEqual(result, "/Photos/2024/summer/beach/deep-image.jpg");
@@ -86,7 +86,7 @@ describe("getOneDriveFilePath", () => {
 
     const result = await getOneDriveFilePath(
       "s!RootSharedId",
-      mockGraphClient as any
+      mockGraphClient as any,
     );
 
     // path.posix.join with empty string doesn't prepend /
@@ -113,7 +113,7 @@ describe("getOneDriveFilePath", () => {
 
     const result = await getOneDriveFilePath(
       "s!SpecialSharedId",
-      mockGraphClient as any
+      mockGraphClient as any,
     );
 
     assert.strictEqual(result, "/My Pictures/photo (1).png");

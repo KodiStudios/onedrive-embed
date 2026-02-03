@@ -19,7 +19,10 @@ describe("getAllFilePaths", () => {
     const result = getAllFilePaths(fixturesInputDir);
 
     for (const filePath of result) {
-      assert.ok(path.isAbsolute(filePath), `Path should be absolute: ${filePath}`);
+      assert.ok(
+        path.isAbsolute(filePath),
+        `Path should be absolute: ${filePath}`,
+      );
     }
   });
 
@@ -27,7 +30,7 @@ describe("getAllFilePaths", () => {
     const result = getAllFilePaths(fixturesInputDir);
 
     const hasNestedFile = result.some((filePath) =>
-      filePath.includes(path.join("nested", "deep.md"))
+      filePath.includes(path.join("nested", "deep.md")),
     );
     assert.ok(hasNestedFile, "Should include nested/deep.md");
   });
@@ -38,22 +41,31 @@ describe("getAllFilePaths", () => {
 
     assert.ok(fileNames.includes("sample.md"), "Should include sample.md");
     assert.ok(fileNames.includes("sample.html"), "Should include sample.html");
-    assert.ok(fileNames.includes("no-embeds.md"), "Should include no-embeds.md");
-    assert.ok(fileNames.includes("already-processed.md"), "Should include already-processed.md");
+    assert.ok(
+      fileNames.includes("no-embeds.md"),
+      "Should include no-embeds.md",
+    );
+    assert.ok(
+      fileNames.includes("already-processed.md"),
+      "Should include already-processed.md",
+    );
     assert.ok(fileNames.includes("deep.md"), "Should include deep.md");
   });
 
   it("should return empty array for empty directory", () => {
     // Create a reference to the temp directory (will be empty or non-existent)
     const emptyDir = path.join(__dirname, ".temp", "empty-test");
-    
+
     // Skip if directory doesn't exist - this is a defensive test
     try {
       const result = getAllFilePaths(emptyDir);
       assert.strictEqual(result.length, 0);
     } catch {
       // Directory doesn't exist, which is expected in clean state
-      assert.ok(true, "Empty directory test skipped - directory does not exist");
+      assert.ok(
+        true,
+        "Empty directory test skipped - directory does not exist",
+      );
     }
   });
 });

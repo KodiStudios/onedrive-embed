@@ -56,7 +56,9 @@ export function addOneDriveFilePath(
   }
 }
 
-export function findFileSharedItemIds(filePath: string): Set</*sharedItemId*/ string> {
+export function findFileSharedItemIds(
+  filePath: string,
+): Set</*sharedItemId*/ string> {
   const sharedItemIds = new Set<string>();
 
   const fileContent: string = fs.readFileSync(filePath, `utf8`);
