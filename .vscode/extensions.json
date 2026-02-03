@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    // Required for VsCode 
+    // to provide TypeScript IntelliSense with Yarn V4
+    "arcanis.vscode-zipfs"
+  ]
+}
