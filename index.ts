@@ -1,11 +1,12 @@
 import { Client } from "@microsoft/microsoft-graph-client";
 import fs, { Dirent } from "node:fs";
 import minimist from "minimist";
-import path from "node:path";
+import * as path from "node:path";
 
-function addOneDriveFilePath(
+// Embed OneDrive file path into OneDrive image URLs in the given file
+export function addOneDriveFilePath(
   filePath: string,
-  sharedIdOdFileHash: Map</*sharedId*/ string, /*oneDrivePath*/ string>
+  sharedIdOdFileHash: Map</*sharedId*/ string, /*oneDrivePath*/ string>,
 ) {
   const fileContent: string = fs.readFileSync(filePath, `utf8`);
   // <img src="https://1drv.ms/i/s!AmslmcZf6z3Lg98-IHg6iib_9ykDOw?embed=1&width=981&height=740" width="981" height="740" />
@@ -24,7 +25,7 @@ function addOneDriveFilePath(
         console.log(`Already Has #`);
       } else {
         let matches: RegExpMatchArray | null = quotedUrl.match(
-          /\:\/\/1drv.ms\/i\/([^\?]+)/
+          /\:\/\/1drv.ms\/i\/([^\?]+)/,
         );
         if (matches) {
           // Get Shared Id
@@ -43,7 +44,7 @@ function addOneDriveFilePath(
       }
 
       return resultString;
-    }
+    },
   );
 
   if (contentChanged) {
@@ -55,7 +56,9 @@ function addOneDriveFilePath(
   }
 }
 
-function findFileSharedItemIds(filePath: string): Set</*sharedItemId*/ string> {
+export function findFileSharedItemIds(
+  filePath: string,
+): Set</*sharedItemId*/ string> {
   const sharedItemIds = new Set<string>();
 
   const fileContent: string = fs.readFileSync(filePath, `utf8`);
@@ -72,9 +75,9 @@ function findFileSharedItemIds(filePath: string): Set</*sharedItemId*/ string> {
   return sharedItemIds;
 }
 
-async function getOneDriveFilePath(
+export async function getOneDriveFilePath(
   sharedItemId: string,
-  graphClient: Client
+  graphClient: Client,
 ): Promise<string> {
   let sharedDriveItem: any = await graphClient
     .api(`/shares/${sharedItemId}/driveItem`)
@@ -98,14 +101,14 @@ async function getOneDriveFilePath(
   // driveItem.name is file name
   const oneDriveFilePath: string = path.posix.join(
     directoryPath,
-    driveItem.name
+    driveItem.name,
   );
   console.log(`filePath: ${oneDriveFilePath}`);
 
   return oneDriveFilePath;
 }
 
-function getAllFilePaths(directoryPath: string): Array<string> {
+export function getAllFilePaths(directoryPath: string): Array<string> {
   let filePaths = new Array<string>();
   const fileOrDirectories: Dirent[] = fs.readdirSync(directoryPath, {
     withFileTypes: true,
@@ -130,9 +133,9 @@ async function main(): Promise<void> {
   if (!argv.directory || !argv.token) {
     console.log("Usage: ");
     console.log(
-      `${process.argv[0]} --experimental-strip-types ${
+      `${process.argv[0]} ${
         import.meta.filename
-      } --directory {directorypath} --token {token_value_from_aka.ms/ge}`
+      } --directory {directorypath} --token {token_value_from_aka.ms/ge}`,
     );
     return;
   }
@@ -142,7 +145,7 @@ async function main(): Promise<void> {
   const sharedItemIds = new Set<string>();
   for (const filePath of filePaths) {
     findFileSharedItemIds(filePath).forEach((value) =>
-      sharedItemIds.add(value)
+      sharedItemIds.add(value),
     );
   }
 
@@ -164,7 +167,7 @@ async function main(): Promise<void> {
     console.log(`sharedItemId: ${sharedItemId}`);
     const oneDriveFilePath = await getOneDriveFilePath(
       sharedItemId,
-      graphClient
+      graphClient,
     );
     console.log(`sharedItemId: ${sharedItemId}`);
     console.log(`oneDriveFilePath: ${oneDriveFilePath}`);
@@ -177,4 +180,7 @@ async function main(): Promise<void> {
   }
 }
 
-await main();
+// Only run main if this is the entry point
+if (import.meta.filename === process.argv[1]) {
+  await main();
+}
