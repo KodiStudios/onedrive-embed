@@ -1,13 +1,9 @@
-# Dependencies (Yarn PnP)
+# Yarn PnP Related Files
 .pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+.yarn/
 
-# Logs
+# Log Files
 *.log
 
-# Test temp files
+# Test Temp directory
 tests/.temp/
