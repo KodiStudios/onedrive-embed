@@ -1,7 +1,7 @@
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert";
 import fs from "node:fs";
-import * as path from "node:path";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { addOneDriveFilePath } from "../index.ts";
 
