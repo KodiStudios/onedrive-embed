@@ -16,6 +16,8 @@
     "test": "node --test",
     "test:watch": "node --test --watch",
     "test:coverage": "node --test --experimental-test-coverage",
+    "//update:yarn": "Updates packageManager field",
+    "update:yarn": "corepack use yarn@latest",
     "update": "yarn up '*@latest' '@types/node@^24'"
   },
   "dependencies": {
