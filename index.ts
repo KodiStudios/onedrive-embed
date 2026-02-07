@@ -1,7 +1,7 @@
 import { Client } from "@microsoft/microsoft-graph-client";
-import fs, { Dirent } from "node:fs";
+import fs, { type Dirent } from "node:fs";
 import minimist from "minimist";
-import * as path from "node:path";
+import path from "node:path";
 
 // Embed OneDrive file path into OneDrive image URLs in the given file
 export function addOneDriveFilePath(
