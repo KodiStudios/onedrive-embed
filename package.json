@@ -9,6 +9,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "postinstall": "yarn run sdks base",
+    "sdks": "yarn dlx @yarnpkg/sdks",
     "test": "node --test",
     "test:watch": "node --test --watch",
     "test:coverage": "node --test --experimental-test-coverage",
