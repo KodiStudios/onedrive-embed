@@ -86,12 +86,31 @@ export function findFileSharedItemIds(
   return sharedItemIds;
 }
 
+// Encode a sharing ID for the Graph /shares/ endpoint.
+// Old format (s!...) works directly.
+// New format (c/{driveId}/{itemId}) needs the full URL base64url-encoded with u! prefix.
+// See: https://learn.microsoft.com/en-us/graph/api/shares-get
+export function encodeSharingId(sharedItemId: string): string {
+  if (sharedItemId.startsWith("s!")) {
+    return sharedItemId;
+  }
+  // Reconstruct the full sharing URL and encode it
+  const sharingUrl = `https://1drv.ms/i/${sharedItemId}`;
+  const base64 = Buffer.from(sharingUrl, "utf-8").toString("base64");
+  const base64url = base64
+    .replace(/=+$/, "")
+    .replace(/\//g, "_")
+    .replace(/\+/g, "-");
+  return `u!${base64url}`;
+}
+
 export async function getOneDriveFilePath(
   sharedItemId: string,
   graphClient: Client,
 ): Promise<string> {
+  const encodedId = encodeSharingId(sharedItemId);
   let sharedDriveItem: any = await graphClient
-    .api(`/shares/${sharedItemId}/driveItem`)
+    .api(`/shares/${encodedId}/driveItem`)
     .get();
 
   let itemId: string = sharedDriveItem.id;
