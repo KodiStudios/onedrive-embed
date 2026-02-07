@@ -11,6 +11,7 @@
   "scripts": {
     "postinstall": "yarn run sdks base",
     "sdks": "yarn dlx @yarnpkg/sdks",
+    "lint": "tsc",
     "test": "node --test",
     "test:watch": "node --test --watch",
     "test:coverage": "node --test --experimental-test-coverage",
@@ -21,6 +22,7 @@
     "minimist": "^1.2.8"
   },
   "devDependencies": {
+    "@tsconfig/node24": "^24.0.4",
     "@types/minimist": "^1.2.5",
     "@types/node": "^24",
     "typescript": "^5.9.3"
