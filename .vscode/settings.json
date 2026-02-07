@@ -1,4 +1,10 @@
 {
+  // Enforce Unix-style (LF) line endings
+  // in VsCode-created files.
+  // Otherwise the default line ending is CRLF on Windows,
+  // which can cause issues in cross-platform development
+  // and with tools that expect LF.
+  "files.eol": "\n",
   "cSpell.allowCompoundWords": true,
   "cSpell.words": ["Aristov", "Kodi"],
   "[typescript]": {

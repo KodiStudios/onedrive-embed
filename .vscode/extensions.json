@@ -1,7 +1,9 @@
 {
   "recommendations": [
-    // Required for VsCode 
+    // Required for VsCode
     // to provide TypeScript IntelliSense with Yarn V4
-    "arcanis.vscode-zipfs"
+    "arcanis.vscode-zipfs",
+    // Code formatter
+    "esbenp.prettier-vscode"
   ]
 }
