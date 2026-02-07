@@ -191,4 +191,52 @@ describe("addOneDriveFilePath", () => {
     const actualContent = fs.readFileSync(tempFile, "utf8");
     assert.strictEqual(actualContent, originalContent);
   });
+
+  it("should write to outputFilePath instead of modifying source file", () => {
+    testRunDir = path.join(tempDir, "test-output-path");
+    const outputDir = path.join(tempDir, "test-output-path-out");
+    fs.mkdirSync(testRunDir, { recursive: true });
+
+    const inputFile = path.join(inputDir, "sample.md");
+    const tempFile = path.join(testRunDir, "sample.md");
+    fs.copyFileSync(inputFile, tempFile);
+
+    const originalContent = fs.readFileSync(tempFile, "utf8");
+
+    const sharedIdMap = createTestSharedIdMap();
+    const outputFile = path.join(outputDir, "sample.md");
+    addOneDriveFilePath(tempFile, sharedIdMap, outputFile);
+
+    // Source file should be unchanged
+    const sourceContent = fs.readFileSync(tempFile, "utf8");
+    assert.strictEqual(sourceContent, originalContent);
+
+    // Output file should match expected
+    const actualContent = fs.readFileSync(outputFile, "utf8");
+    const expectedContent = fs.readFileSync(
+      path.join(expectedDir, "sample.md"),
+      "utf8",
+    );
+    assert.strictEqual(actualContent, expectedContent);
+  });
+
+  it("should write unchanged content to outputFilePath when no shared IDs match", () => {
+    testRunDir = path.join(tempDir, "test-output-path-unchanged");
+    const outputDir = path.join(tempDir, "test-output-path-unchanged-out");
+    fs.mkdirSync(testRunDir, { recursive: true });
+
+    const inputFile = path.join(inputDir, "no-embeds.md");
+    const tempFile = path.join(testRunDir, "no-embeds.md");
+    fs.copyFileSync(inputFile, tempFile);
+
+    const originalContent = fs.readFileSync(tempFile, "utf8");
+
+    const sharedIdMap = createTestSharedIdMap();
+    const outputFile = path.join(outputDir, "no-embeds.md");
+    addOneDriveFilePath(tempFile, sharedIdMap, outputFile);
+
+    // Output file should exist with unchanged content (complete copy)
+    const actualContent = fs.readFileSync(outputFile, "utf8");
+    assert.strictEqual(actualContent, originalContent);
+  });
 });

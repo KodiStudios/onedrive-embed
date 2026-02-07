@@ -4,9 +4,11 @@ import minimist from "minimist";
 import path from "node:path";
 
 // Embed OneDrive file path into OneDrive image URLs in the given file
+// When outputFilePath is provided, writes to that path instead of modifying filePath in-place
 export function addOneDriveFilePath(
   filePath: string,
   sharedIdOdFileHash: Map</*sharedId*/ string, /*oneDrivePath*/ string>,
+  outputFilePath?: string,
 ) {
   const fileContent: string = fs.readFileSync(filePath, `utf8`);
   // <img src="https://1drv.ms/i/s!AmslmcZf6z3Lg98-IHg6iib_9ykDOw?embed=1&width=981&height=740" width="981" height="740" />
@@ -47,9 +49,18 @@ export function addOneDriveFilePath(
     },
   );
 
-  if (contentChanged) {
-    console.log(`Writing File: ${filePath}`);
-    fs.writeFileSync(filePath, updatedFileContent, {
+  const targetPath = outputFilePath ?? filePath;
+  if (outputFilePath) {
+    // When outputFilePath is provided, always write (complete copy)
+    fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });
+    console.log(`Writing File: ${targetPath}`);
+    fs.writeFileSync(targetPath, updatedFileContent, {
+      encoding: "utf8",
+      flag: "w",
+    });
+  } else if (contentChanged) {
+    console.log(`Writing File: ${targetPath}`);
+    fs.writeFileSync(targetPath, updatedFileContent, {
       encoding: "utf8",
       flag: "w",
     });
@@ -75,12 +86,31 @@ export function findFileSharedItemIds(
   return sharedItemIds;
 }
 
+// Encode a sharing ID for the Graph /shares/ endpoint.
+// Old format (s!...) works directly.
+// New format (c/{driveId}/{itemId}) needs the full URL base64url-encoded with u! prefix.
+// See: https://learn.microsoft.com/en-us/graph/api/shares-get
+export function encodeSharingId(sharedItemId: string): string {
+  if (sharedItemId.startsWith("s!")) {
+    return sharedItemId;
+  }
+  // Reconstruct the full sharing URL and encode it
+  const sharingUrl = `https://1drv.ms/i/${sharedItemId}`;
+  const base64 = Buffer.from(sharingUrl, "utf-8").toString("base64");
+  const base64url = base64
+    .replace(/=+$/, "")
+    .replace(/\//g, "_")
+    .replace(/\+/g, "-");
+  return `u!${base64url}`;
+}
+
 export async function getOneDriveFilePath(
   sharedItemId: string,
   graphClient: Client,
 ): Promise<string> {
+  const encodedId = encodeSharingId(sharedItemId);
   let sharedDriveItem: any = await graphClient
-    .api(`/shares/${sharedItemId}/driveItem`)
+    .api(`/shares/${encodedId}/driveItem`)
     .get();
 
   let itemId: string = sharedDriveItem.id;
@@ -135,10 +165,12 @@ async function main(): Promise<void> {
     console.log(
       `${process.argv[0]} ${
         import.meta.filename
-      } --directory {directorypath} --token {token_value_from_aka.ms/ge}`,
+      } --directory {directorypath} --token {token_value_from_aka.ms/ge} [--output-directory {outputpath}]`,
     );
     return;
   }
+
+  const outputDirectory: string | undefined = argv["output-directory"];
 
   const filePaths: Array<string> = getAllFilePaths(argv.directory);
 
@@ -176,7 +208,10 @@ async function main(): Promise<void> {
   }
 
   for (const filePath of filePaths) {
-    addOneDriveFilePath(filePath, oneDriveFilePathMap);
+    const outputFilePath = outputDirectory
+      ? path.join(outputDirectory, path.relative(argv.directory, filePath))
+      : undefined;
+    addOneDriveFilePath(filePath, oneDriveFilePathMap, outputFilePath);
   }
 }
 
