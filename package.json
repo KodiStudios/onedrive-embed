@@ -9,8 +9,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "postinstall": "yarn run sdks base",
-    "sdks": "yarn dlx @yarnpkg/sdks",
+    "//postinstall and sdks": "Required only for Yarn Pnp",
+    "//postinstall": "yarn run sdks base",
+    "//sdks": "yarn dlx @yarnpkg/sdks",
     "lint": "tsc && prettier --write .",
     "format": "prettier --write .",
     "test": "node --test",
