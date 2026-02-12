@@ -2,6 +2,9 @@
 .pnp.*
 .yarn/
 
+# Yarn Node Modules
+node_modules/
+
 # Log Files
 *.log
 
